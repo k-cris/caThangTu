@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>🎁 Nhận quà bí mật</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    height:100vh;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    font-family:'Segoe UI',sans-serif;
+    color:white;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.container{
+    backdrop-filter:blur(10px);
+    background:rgba(255,255,255,0.1);
+    padding:40px;
+    border-radius:20px;
+}
+
+#gift{
+    position:absolute;
+    font-size:60px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.shake{animation:shake 0.2s infinite;}
+@keyframes shake{
+    0%{transform:rotate(0deg);}
+    50%{transform:rotate(5deg);}
+    100%{transform:rotate(-5deg);}
+}
+
+#game{display:none;margin-top:20px;}
+
+#bar{
+    width:300px;
+    height:20px;
+    background:rgba(255,255,255,0.3);
+    position:relative;
+    border-radius:10px;
+    margin:30px auto;
+    transform:rotate(0deg);
+    cursor:grab;
+}
+
+#ball{
+    width:20px;
+    height:20px;
+    background:white;
+    border-radius:50%;
+    position:absolute;
+    top:0;
+    left:0;
+}
+
+#target{
+    position:absolute;
+    width:20px;
+    height:20px;
+    background:lime;
+    left:230px;
+}
+
+#msg{
+    margin-top:20px;
+    font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎁 Bạn có quà bí mật</h1>
+    <p>Hãy bắt lấy nó nếu bạn đủ nhanh 😏</p>
+
+    <div id="game">
+        <h2>🎯 Giữ viên bi trong vùng xanh 5 giây</h2>
+
+        <div id="bar">
+            <div id="target"></div>
+            <div id="ball"></div>
+        </div>
+
+        <p id="msg"></p>
+    </div>
+</div>
+
+<div id="gift">🎁</div>
+
+<script>
+let gift = document.getElementById("gift");
+let size = 60, moves = 0, unlocked = false;
+
+gift.style.top = "50%";
+gift.style.left = "50%";
+
+gift.addEventListener("mouseover", ()=>{
+    gift.classList.add("shake");
+
+    if(!unlocked){
+        let x = Math.random()*(window.innerWidth-100);
+        let y = Math.random()*(window.innerHeight-100);
+
+        gift.style.left = x+"px";
+        gift.style.top = y+"px";
+
+        size += 10;
+        gift.style.fontSize = size+"px";
+
+        moves++;
+        if(moves > 8) unlocked = true;
+    }
+});
+
+gift.addEventListener("mouseleave", ()=>gift.classList.remove("shake"));
+
+gift.addEventListener("click", ()=>{
+    if(unlocked){
+        gift.style.display="none";
+        document.getElementById("game").style.display="block";
+    }
+});
+
+/* ===== GAME ===== */
+let bar = document.getElementById("bar");
+let ball = document.getElementById("ball");
+let msg = document.getElementById("msg");
+
+let angle = 0;
+let velocity = 0;
+let pos = 0;
+
+let dragging = false;
+
+// giữ chuột
+bar.addEventListener("mousedown", ()=>{
+    dragging = true;
+    bar.style.cursor = "grabbing";
+});
+
+document.addEventListener("mouseup", ()=>{
+    dragging = false;
+    bar.style.cursor = "grab";
+});
+
+// kéo lên xuống để nghiêng
+document.addEventListener("mousemove", (e)=>{
+    if(!dragging) return;
+
+    let centerY = window.innerHeight/2;
+    let offset = (e.clientY - centerY)/centerY;
+
+    angle = offset * 40;
+    bar.style.transform = `rotate(${angle}deg)`;
+});
+
+// giữ 5 giây
+let holdTime = 0;
+let win = false;
+
+function update(){
+    let accel = angle * 0.02;
+    velocity += accel;
+    velocity *= 0.95;
+
+    pos += velocity;
+
+    if(pos < 0){ pos = 0; velocity = 0; }
+    if(pos > 280){ pos = 280; velocity = 0; }
+
+    ball.style.left = pos + "px";
+
+    let dt = 16;
+
+    if(Math.abs(pos - 230) < 5){
+        holdTime += dt;
+        msg.innerText = `⏳ Giữ ổn định: ${(holdTime/1000).toFixed(1)}s / 5s`;
+
+        if(holdTime >= 5000 && !win){
+            win = true;
+            msg.innerText = "🎉 Chúc bạn một ngày cá tháng tư vui vẻ 😈";
+        }
+    } else {
+        holdTime = 0;
+    }
+
+    requestAnimationFrame(update);
+}
+
+update();
+</script>
+
+</body>
+</html>
